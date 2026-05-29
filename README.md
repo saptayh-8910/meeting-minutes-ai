@@ -130,5 +130,3 @@ Uses opacity-based CSS rather than hardcoded colors. Works in both modes without
 議事録 (meeting minutes) documentation is taken seriously in Japanese business culture. Most tools default to English patterns. This one outputs in whichever language the transcript is in, and the email draft uses appropriate keigo when set to Japanese.
 
 ---
-
-*Part of an AI engineering portfolio. [See all projects →](https://github.com/saptayh-8910)*
