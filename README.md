@@ -21,20 +21,49 @@ Steps 1–3 use Claude Haiku for speed. Step 4 uses Claude Sonnet because email 
 
 ## Example
 
-Input (81 words of standup notes):
+Input (506 words — Q2 product planning meeting with 4 attendees):
+
 ```
-Sapta: Can you have the tests done by Friday?
-Yuki: Yes, I'll have them ready by Friday afternoon.
-Sapta: Also we decided to use Claude Haiku for production to save costs.
-Yuki: One issue - I still need access to the staging server.
-Sapta: I'll request that today.
+Meeting: Q2 Product Planning — AI Customer Support Initiative
+Date: May 27, 2026
+Attendees: Sapta (PM), Yuki (Engineering Lead), Kenji (Designer), Maria (Marketing)
+
+Sapta: Let's start. The main topic today is the AI customer support bot
+we're planning to launch for our SME clients in Japan.
+Yuki: I've reviewed the technical requirements. We can build the RAG-based
+system using LangChain and ChromaDB...
+...
+Yuki: We need AWS credentials for the production deployment. I've requested
+them from IT but haven't heard back.
+Sapta: I'll follow up with IT today. That's a blocker we need resolved ASAP.
 ```
 
 Output:
-- **Action item**: Yuki → Complete API integration testing → Friday May 29
-- **Action item**: Sapta → Request staging server access → Today May 28
-- **Decision**: Use Claude Haiku for production deployment
-- **Email draft**: Subject, summary, action table, ready to send
+
+**Action items extracted (sample):**
+
+| Owner | Action | Deadline | Priority |
+|---|---|---|---|
+| Yuki | Draft FAQ structure (50 pairs) with Maria | June 7 | High |
+| Kenji | Complete mobile-first UI designs | June 10 | High |
+| Maria | Set up 3 customer interviews for UI validation | Week of June 3 | High |
+| Maria | Landing page ready for pre-launch marketing | June 15 | High |
+| Sapta | Follow up with IT re: AWS credentials | Today | High |
+| Everyone | Send pricing input to Sapta | Friday | Medium |
+
+**Decisions made:**
+- Target food and retail SME segment for the pilot
+- Start with Claude Haiku for production; upgrade based on satisfaction scores
+- Offer 14-day free trial period
+
+**Open questions:**
+- Pricing model (deferred to next week pending competitor research)
+- Final model selection (Haiku vs Sonnet) based on user feedback
+
+**Blockers:**
+- AWS credentials for production deployment — requested from IT, no response yet
+
+**Email draft:** Subject line, summary paragraph, action table, next meeting date — ready to send.
 
 ---
 
@@ -81,6 +110,9 @@ Email is the thing people actually send externally. The extra cost (~$0.003 per 
 
 **Why not use LangChain chains?**
 The Anthropic SDK is simpler for linear chains. LangChain adds abstraction cost without benefit here.
+
+**Dark/light mode**
+Uses opacity-based CSS rather than hardcoded colors. Works in both modes without a separate theme.
 
 ---
 
