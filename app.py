@@ -8,48 +8,137 @@ from anthropic import Anthropic
 load_dotenv()
 
 st.set_page_config(
-    page_title="Meeting Minutes AI",
+    page_title="Meeting Minutes",
     page_icon="📝",
     layout="wide"
 )
 
 st.markdown("""
 <style>
-    .main { padding-top: 0.5rem; }
-    .header-box {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-        padding: 1.5rem 2rem; border-radius: 12px; margin-bottom: 1.5rem;
-        border: 1px solid #30363d;
+    .main { padding-top: 1rem; }
+
+    .page-header {
+        padding: 0 0 1rem 0;
+        border-bottom: 1px solid rgba(128,128,128,0.2);
+        margin-bottom: 1.5rem;
     }
-    .header-box h1 { color: white; margin: 0; font-size: 1.8rem; }
-    .header-box p { color: #8b949e; margin: 4px 0 0; }
-    .section-card {
-        background: #f8f9fa; border-radius: 10px; padding: 16px;
-        margin: 8px 0; border-left: 4px solid #0f3460;
+    .page-header h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0 0 4px 0;
     }
-    .action-item {
-        background: #fff3cd; border-radius: 8px; padding: 10px 14px;
-        margin: 6px 0; border-left: 4px solid #ffc107;
+    .page-header p {
+        font-size: 0.875rem;
+        opacity: 0.6;
+        margin: 0;
     }
-    .decision-item {
-        background: #d4edda; border-radius: 8px; padding: 10px 14px;
-        margin: 6px 0; border-left: 4px solid #28a745;
+
+    /* Action items */
+    .action-row {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(128,128,128,0.15);
     }
-    .question-item {
-        background: #cce5ff; border-radius: 8px; padding: 10px 14px;
-        margin: 6px 0; border-left: 4px solid #004085;
+    .action-row:last-child { border-bottom: none; }
+    .action-priority {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-top: 6px;
+        flex-shrink: 0;
     }
-    .step-badge {
-        background: #0f3460; color: white; border-radius: 99px;
-        padding: 3px 10px; font-size: 12px; font-weight: 600;
-        display: inline-block; margin-bottom: 8px;
+    .priority-high { background: #ef4444; }
+    .priority-medium { background: #f59e0b; }
+    .priority-low { background: #22c55e; }
+    .action-content { flex: 1; }
+    .action-owner {
+        font-size: 12px;
+        font-weight: 600;
+        opacity: 0.5;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
+    .action-text {
+        font-size: 14px;
+        margin: 2px 0 4px;
+        line-height: 1.4;
+    }
+    .action-deadline {
+        font-size: 12px;
+        opacity: 0.5;
+    }
+
+    /* Decisions */
+    .decision-row {
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(128,128,128,0.15);
+        font-size: 14px;
+        line-height: 1.5;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    .decision-row:last-child { border-bottom: none; }
+    .decision-marker { opacity: 0.4; flex-shrink: 0; margin-top: 1px; }
+
+    /* Section labels */
+    .section-label {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        opacity: 0.45;
+        margin: 1.25rem 0 0.5rem;
+    }
+
+    /* Summary box */
+    .summary-text {
+        font-size: 14px;
+        line-height: 1.7;
+        opacity: 0.85;
+        padding: 12px 0;
+    }
+
+    /* Meta row */
+    .meta-row {
+        display: flex;
+        gap: 24px;
+        font-size: 13px;
+        opacity: 0.55;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(128,128,128,0.15);
+        margin-bottom: 4px;
+        flex-wrap: wrap;
+    }
+
+    /* Blocker */
+    .blocker-row {
+        padding: 10px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(239,68,68,0.3);
+        background: rgba(239,68,68,0.06);
+        font-size: 14px;
+        margin: 6px 0;
+        color: #ef4444;
+    }
+
+    /* Question */
+    .question-row {
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(128,128,128,0.15);
+        font-size: 14px;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        opacity: 0.8;
+    }
+    .question-row:last-child { border-bottom: none; }
 </style>
 """, unsafe_allow_html=True)
 
-# ── Sample meeting transcript ─────────────────────────────────────────
-SAMPLE_TRANSCRIPT = """
-Meeting: Q2 Product Planning — AI Customer Support Initiative
+SAMPLE_TRANSCRIPT = """Meeting: Q2 Product Planning — AI Customer Support Initiative
 Date: May 27, 2026
 Attendees: Sapta (PM), Yuki (Engineering Lead), Kenji (Designer), Maria (Marketing)
 
@@ -99,351 +188,252 @@ Kenji: I also need user interview slots — can Marketing set up 3 sessions with
 
 Maria: I'll set up 3 customer interviews for the week of June 3rd. I'll send calendar invites today.
 
-Sapta: Perfect. Let's wrap up. Next meeting is June 3rd, same time. I'll send the recap email.
-"""
+Sapta: Perfect. Let's wrap up. Next meeting is June 3rd, same time. I'll send the recap email."""
 
-# ── Prompt chaining — 4 AI steps ─────────────────────────────────────
 def extract_minutes(transcript, language, client):
     results = {}
     progress = st.progress(0)
     status = st.empty()
+    lang_instruction = "Respond in Japanese." if language == "Japanese" else "Respond in English."
 
-    # ── Step 1: Summary ────────────────────────────────────────────────
-    status.markdown("**Step 1/4** — Generating meeting summary...")
-    lang_instruction = "Respond in Japanese (日本語で回答してください)." if language == "Japanese" else "Respond in English."
-
-    summary_response = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=1024,
-        messages=[{"role": "user", "content": f"""You are an expert meeting facilitator. {lang_instruction}
-
-Analyze this meeting transcript and provide:
-1. Meeting title and date (if mentioned)
-2. Attendees list
-3. A concise executive summary (3-4 sentences covering the main topic and outcomes)
-4. Key topics discussed (bullet points)
-
-Transcript:
-{transcript}
-
-Format your response as JSON:
+    # Step 1: Summary
+    status.markdown("<span style='opacity:0.6; font-size:13px'>Step 1 of 4 — Summarising...</span>", unsafe_allow_html=True)
+    r = client.messages.create(
+        model="claude-haiku-4-5-20251001", max_tokens=1024,
+        messages=[{"role": "user", "content": f"""{lang_instruction} Analyse this transcript and return ONLY valid JSON:
 {{
   "title": "...",
   "date": "...",
   "attendees": ["..."],
-  "summary": "...",
-  "topics": ["..."]
+  "summary": "2-3 sentence executive summary",
+  "topics": ["topic 1", "topic 2"]
 }}
 
-Return ONLY valid JSON."""}]
+Transcript:
+{transcript}"""}]
     )
     try:
-        raw = summary_response.content[0].text.strip()
-        if "```" in raw:
-            raw = raw.split("```")[1].replace("json", "").strip()
+        raw = r.content[0].text.strip().strip("```json").strip("```").strip()
         results["summary"] = json.loads(raw)
     except:
-        results["summary"] = {"title": "Meeting", "date": "", "attendees": [], "summary": summary_response.content[0].text, "topics": []}
+        results["summary"] = {"title":"Meeting","date":"","attendees":[],"summary":r.content[0].text,"topics":[]}
     progress.progress(25)
 
-    # ── Step 2: Action items ───────────────────────────────────────────
-    status.markdown("**Step 2/4** — Extracting action items...")
-    action_response = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=1024,
-        messages=[{"role": "user", "content": f"""Extract ALL action items from this meeting transcript. {lang_instruction}
-
-For each action item identify: who owns it, what they need to do, and the deadline (if mentioned).
-
-Transcript:
-{transcript}
-
-Format as JSON:
+    # Step 2: Actions
+    status.markdown("<span style='opacity:0.6; font-size:13px'>Step 2 of 4 — Extracting action items...</span>", unsafe_allow_html=True)
+    r = client.messages.create(
+        model="claude-haiku-4-5-20251001", max_tokens=1024,
+        messages=[{"role": "user", "content": f"""{lang_instruction} Extract all action items. Return ONLY valid JSON:
 {{
   "action_items": [
-    {{
-      "owner": "Person's name",
-      "action": "What they need to do",
-      "deadline": "Date or timeframe, or 'Not specified'",
-      "priority": "High/Medium/Low"
-    }}
+    {{"owner": "Name", "action": "What to do", "deadline": "When or Not specified", "priority": "High|Medium|Low"}}
   ]
 }}
 
-Return ONLY valid JSON."""}]
+Transcript:
+{transcript}"""}]
     )
     try:
-        raw = action_response.content[0].text.strip()
-        if "```" in raw:
-            raw = raw.split("```")[1].replace("json", "").strip()
+        raw = r.content[0].text.strip().strip("```json").strip("```").strip()
         results["actions"] = json.loads(raw)
     except:
-        results["actions"] = {"action_items": []}
+        results["actions"] = {"action_items":[]}
     progress.progress(50)
 
-    # ── Step 3: Decisions & questions ─────────────────────────────────
-    status.markdown("**Step 3/4** — Identifying decisions and open questions...")
-    decisions_response = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=1024,
-        messages=[{"role": "user", "content": f"""From this meeting transcript, extract: {lang_instruction}
-1. Key decisions that were made (clear agreements reached)
-2. Open questions or items parked for later discussion
-3. Blockers or risks mentioned
-
-Transcript:
-{transcript}
-
-Format as JSON:
+    # Step 3: Decisions
+    status.markdown("<span style='opacity:0.6; font-size:13px'>Step 3 of 4 — Identifying decisions...</span>", unsafe_allow_html=True)
+    r = client.messages.create(
+        model="claude-haiku-4-5-20251001", max_tokens=1024,
+        messages=[{"role": "user", "content": f"""{lang_instruction} Extract decisions, open questions, and blockers. Return ONLY valid JSON:
 {{
-  "decisions": ["Decision 1", "Decision 2"],
-  "open_questions": ["Question 1", "Question 2"],
-  "blockers": ["Blocker 1"]
+  "decisions": ["..."],
+  "open_questions": ["..."],
+  "blockers": ["..."]
 }}
 
-Return ONLY valid JSON."""}]
+Transcript:
+{transcript}"""}]
     )
     try:
-        raw = decisions_response.content[0].text.strip()
-        if "```" in raw:
-            raw = raw.split("```")[1].replace("json", "").strip()
+        raw = r.content[0].text.strip().strip("```json").strip("```").strip()
         results["decisions"] = json.loads(raw)
     except:
-        results["decisions"] = {"decisions": [], "open_questions": [], "blockers": []}
+        results["decisions"] = {"decisions":[],"open_questions":[],"blockers":[]}
     progress.progress(75)
 
-    # ── Step 4: Email draft ────────────────────────────────────────────
-    status.markdown("**Step 4/4** — Drafting follow-up email...")
-    email_response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=1024,
-        messages=[{"role": "user", "content": f"""Write a professional meeting recap email. {lang_instruction}
-
-Based on this transcript, write a concise, well-formatted email that:
-- Has a clear subject line
-- Summarizes key outcomes in 2-3 sentences
-- Lists action items with owners and deadlines
-- Lists key decisions made
-- Notes any open questions for next meeting
-- Is professional but friendly
-
-Use Japanese business email etiquette if writing in Japanese (appropriate keigo).
+    # Step 4: Email (Sonnet for quality)
+    status.markdown("<span style='opacity:0.6; font-size:13px'>Step 4 of 4 — Drafting follow-up email...</span>", unsafe_allow_html=True)
+    r = client.messages.create(
+        model="claude-sonnet-4-6", max_tokens=1024,
+        messages=[{"role": "user", "content": f"""{lang_instruction} Write a professional meeting recap email (subject line + body). Include action items with owners and deadlines. Be concise. No filler phrases.
 
 Transcript:
-{transcript}
-
-Write just the email (subject line + body), no extra commentary."""}]
+{transcript}"""}]
     )
-    results["email"] = email_response.content[0].text
+    results["email"] = r.content[0].text
     progress.progress(100)
-
     status.empty()
     progress.empty()
     return results
 
-# ══ MAIN UI ═══════════════════════════════════════════════════════════
-
+# ── UI ────────────────────────────────────────────────────────────────
 st.markdown("""
-<div class="header-box">
-    <h1>📝 Meeting Minutes AI Agent</h1>
-    <p>Paste your meeting transcript → Get structured minutes, action items, decisions, and a ready-to-send email · EN/JP対応</p>
+<div class="page-header">
+    <h1>Meeting Minutes</h1>
+    <p>Paste a transcript — get structured minutes, action items, and a follow-up email.</p>
 </div>
 """, unsafe_allow_html=True)
 
-# ── Sidebar ───────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("### ⚙️ Settings")
-    language = st.selectbox("Output Language", ["English", "Japanese"], help="Language for the generated minutes")
-    model_info = st.expander("🤖 How it works")
-    with model_info:
-        st.markdown("""
-        This agent uses **prompt chaining** — 4 sequential AI calls:
-
-        1. **Summary Agent** → Meeting overview + topics
-        2. **Action Extractor** → Who does what by when
-        3. **Decision Tracker** → Decisions + open questions
-        4. **Email Drafter** → Ready-to-send recap (uses Sonnet for quality)
-
-        Each step builds on the previous one.
-        """)
-
+    st.markdown("**Output language**")
+    language = st.selectbox("", ["English", "Japanese"], label_visibility="collapsed")
     st.divider()
-    st.markdown("### 📋 What Gets Extracted")
-    items = [
-        "📌 Meeting summary",
-        "✅ Action items + owners",
-        "📅 Deadlines",
-        "🔑 Key decisions",
-        "❓ Open questions",
-        "🚧 Blockers & risks",
-        "📧 Follow-up email draft",
-    ]
-    for item in items:
-        st.markdown(f"<div style='font-size:13px; padding:3px 0'>{item}</div>", unsafe_allow_html=True)
+    st.markdown("""<div style='font-size:13px; opacity:0.6; line-height:1.8'>
+    Steps 1–3: Claude Haiku<br>
+    Step 4: Claude Sonnet<br><br>
+    Extracts:<br>
+    Action items + owners<br>
+    Deadlines<br>
+    Decisions made<br>
+    Open questions<br>
+    Blockers<br>
+    Follow-up email
+    </div>""", unsafe_allow_html=True)
 
-    st.divider()
-    st.caption("Step 1-3: Claude Haiku (fast)")
-    st.caption("Step 4: Claude Sonnet (quality email)")
+col1, col2 = st.columns([1, 1], gap="large")
 
-# ── Main area ─────────────────────────────────────────────────────────
-col_input, col_output = st.columns([1, 1])
-
-with col_input:
-    st.markdown("### 📥 Meeting Transcript")
-
-    use_sample = st.button("⚡ Load Sample Transcript", use_container_width=True,
-                           help="Load a sample product planning meeting")
-
-    if use_sample:
+with col1:
+    if st.button("Load sample transcript", use_container_width=False):
         st.session_state.transcript = SAMPLE_TRANSCRIPT
 
     transcript = st.text_area(
-        "Paste your meeting transcript here",
+        "Transcript",
         value=st.session_state.get("transcript", ""),
-        height=400,
-        placeholder="Paste your meeting notes or transcript here...\n\nTip: Include speaker names, dates, and any mentioned deadlines for better results.",
-        key="transcript_input"
+        height=420,
+        placeholder="Paste meeting notes or transcript here...",
+        label_visibility="collapsed"
     )
 
-    word_count = len(transcript.split()) if transcript else 0
-    st.caption(f"Word count: {word_count}")
+    wc = len(transcript.split()) if transcript else 0
+    col_wc, col_btn = st.columns([1, 2])
+    with col_wc:
+        st.caption(f"{wc} words")
+    with col_btn:
+        run = st.button("Generate minutes →", type="primary", disabled=wc < 20, use_container_width=True)
 
-    if transcript and word_count > 20:
-        if st.button("🚀 Generate Meeting Minutes", type="primary", use_container_width=True):
-            client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-            with st.spinner(""):
-                results = extract_minutes(transcript, language, client)
-            st.session_state.results = results
-            st.success("✅ Minutes generated!")
-    else:
-        st.info("Load the sample transcript or paste your own, then click Generate.")
+    if run and wc >= 20:
+        client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        results = extract_minutes(transcript, language, client)
+        st.session_state.results = results
 
-with col_output:
-    st.markdown("### 📤 Generated Minutes")
-
+with col2:
     if "results" not in st.session_state:
-        st.markdown("""
-        **How to use:**
-        1. Click **Load Sample Transcript** to see an example
-        2. Or paste your own meeting notes
-        3. Click **Generate Meeting Minutes**
-        4. Download the results in multiple formats
-
-        **Works best with:**
-        - Team meetings with multiple speakers
-        - Product planning sessions
-        - Client calls with action items
-        - 1:1s with follow-up tasks
-        """)
+        st.markdown("<div style='opacity:0.4; font-size:14px; padding-top:2rem'>Results appear here.</div>", unsafe_allow_html=True)
     else:
-        results = st.session_state.results
-        summary = results.get("summary", {})
-        actions = results.get("actions", {}).get("action_items", [])
-        decisions = results.get("decisions", {})
-        email = results.get("email", "")
+        r = st.session_state.results
+        summary = r.get("summary", {})
+        actions = r.get("actions", {}).get("action_items", [])
+        decisions = r.get("decisions", {})
+        email = r.get("email", "")
 
         tab1, tab2, tab3, tab4 = st.tabs([
-            f"📋 Summary",
-            f"✅ Actions ({len(actions)})",
-            f"🔑 Decisions",
-            f"📧 Email Draft"
+            "Summary",
+            f"Actions ({len(actions)})",
+            "Decisions",
+            "Email"
         ])
 
         with tab1:
+            meta_parts = []
+            if summary.get("date"): meta_parts.append(summary["date"])
+            if summary.get("attendees"): meta_parts.append(", ".join(summary["attendees"]))
+            if meta_parts:
+                st.markdown(f"<div class='meta-row'>{'&nbsp;&nbsp;·&nbsp;&nbsp;'.join(meta_parts)}</div>", unsafe_allow_html=True)
             if summary.get("title"):
                 st.markdown(f"**{summary['title']}**")
-            if summary.get("date"):
-                st.caption(f"📅 {summary['date']}")
-            if summary.get("attendees"):
-                st.markdown(f"**Attendees:** {', '.join(summary['attendees'])}")
-            st.divider()
             if summary.get("summary"):
-                st.markdown(f"**Executive Summary**\n\n{summary['summary']}")
+                st.markdown(f"<div class='summary-text'>{summary['summary']}</div>", unsafe_allow_html=True)
             if summary.get("topics"):
-                st.markdown("**Topics Discussed**")
-                for topic in summary["topics"]:
-                    st.markdown(f"- {topic}")
+                st.markdown("<div class='section-label'>Topics covered</div>", unsafe_allow_html=True)
+                for t in summary["topics"]:
+                    st.markdown(f"<div class='decision-row'><span class='decision-marker'>—</span>{t}</div>", unsafe_allow_html=True)
 
         with tab2:
             if actions:
-                for i, item in enumerate(actions, 1):
-                    priority_color = "🔴" if item.get("priority") == "High" else "🟡" if item.get("priority") == "Medium" else "🟢"
-                    st.markdown(f"""<div class="action-item">
-                        <strong>{priority_color} #{i} {item.get('owner', 'TBD')}</strong><br>
-                        {item.get('action', '')}<br>
-                        <small>📅 Deadline: {item.get('deadline', 'Not specified')}</small>
+                for item in actions:
+                    p = item.get("priority","Medium")
+                    dot_class = "priority-high" if p=="High" else "priority-medium" if p=="Medium" else "priority-low"
+                    st.markdown(f"""<div class='action-row'>
+                        <div class='action-priority {dot_class}'></div>
+                        <div class='action-content'>
+                            <div class='action-owner'>{item.get('owner','TBD')}</div>
+                            <div class='action-text'>{item.get('action','')}</div>
+                            <div class='action-deadline'>{item.get('deadline','No deadline specified')}</div>
+                        </div>
                     </div>""", unsafe_allow_html=True)
             else:
-                st.info("No action items found.")
+                st.markdown("<div style='opacity:0.5; font-size:14px'>No action items found.</div>", unsafe_allow_html=True)
 
         with tab3:
-            dec_list = decisions.get("decisions", [])
+            dec = decisions.get("decisions", [])
             questions = decisions.get("open_questions", [])
             blockers = decisions.get("blockers", [])
 
-            if dec_list:
-                st.markdown("**✅ Decisions Made**")
-                for d in dec_list:
-                    st.markdown(f"""<div class="decision-item">{d}</div>""", unsafe_allow_html=True)
+            if dec:
+                st.markdown("<div class='section-label'>Decided</div>", unsafe_allow_html=True)
+                for d in dec:
+                    st.markdown(f"<div class='decision-row'><span class='decision-marker'>✓</span>{d}</div>", unsafe_allow_html=True)
 
             if questions:
-                st.markdown("**❓ Open Questions / Parking Lot**")
+                st.markdown("<div class='section-label'>Open questions</div>", unsafe_allow_html=True)
                 for q in questions:
-                    st.markdown(f"""<div class="question-item">{q}</div>""", unsafe_allow_html=True)
+                    st.markdown(f"<div class='question-row'><span class='decision-marker'>?</span>{q}</div>", unsafe_allow_html=True)
 
             if blockers:
-                st.markdown("**🚧 Blockers & Risks**")
+                st.markdown("<div class='section-label'>Blockers</div>", unsafe_allow_html=True)
                 for b in blockers:
-                    st.error(b)
+                    st.markdown(f"<div class='blocker-row'>⚠ {b}</div>", unsafe_allow_html=True)
+
+            if not dec and not questions and not blockers:
+                st.markdown("<div style='opacity:0.5; font-size:14px'>Nothing extracted.</div>", unsafe_allow_html=True)
 
         with tab4:
-            st.markdown(email)
-            st.download_button(
-                "📋 Copy Email",
-                data=email,
-                file_name="meeting_recap_email.txt",
-                mime="text/plain",
-                use_container_width=True
-            )
+            st.markdown(f"<div style='font-size:14px; line-height:1.7; white-space:pre-wrap'>{email}</div>", unsafe_allow_html=True)
+            st.divider()
+            st.download_button("Download email", data=email, file_name="recap.txt", mime="text/plain")
 
-        # ── Download full minutes ──────────────────────────────────────
         st.divider()
-        full_minutes = f"""MEETING MINUTES
-Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}
-Language: {language}
+        full = f"""MEETING MINUTES — {datetime.now().strftime('%Y-%m-%d %H:%M')}
 
-{'='*50}
+{summary.get('title','')}
+{summary.get('date','')}
+Attendees: {', '.join(summary.get('attendees',[]))}
+
 SUMMARY
-{'='*50}
-{summary.get('summary', '')}
+{summary.get('summary','')}
 
-Attendees: {', '.join(summary.get('attendees', []))}
-Topics: {chr(10).join('- ' + t for t in summary.get('topics', []))}
+TOPICS
+{chr(10).join('- '+t for t in summary.get('topics',[]))}
 
-{'='*50}
 ACTION ITEMS
-{'='*50}
-{chr(10).join(f"[{i['priority']}] {i['owner']}: {i['action']} (Due: {i['deadline']})" for i in actions)}
+{chr(10).join(f"[{i.get('priority','?')}] {i.get('owner','?')}: {i.get('action','')} — {i.get('deadline','no deadline')}" for i in actions)}
 
-{'='*50}
-DECISIONS MADE
-{'='*50}
-{chr(10).join('- ' + d for d in decisions.get('decisions', []))}
+DECISIONS
+{chr(10).join('- '+d for d in decisions.get('decisions',[]))}
 
-{'='*50}
 OPEN QUESTIONS
-{'='*50}
-{chr(10).join('- ' + q for q in decisions.get('open_questions', []))}
+{chr(10).join('- '+q for q in decisions.get('open_questions',[]))}
 
-{'='*50}
-FOLLOW-UP EMAIL DRAFT
-{'='*50}
+BLOCKERS
+{chr(10).join('- '+b for b in decisions.get('blockers',[]))}
+
+EMAIL DRAFT
 {email}
 """
         st.download_button(
-            "📥 Download Full Minutes (.txt)",
-            data=full_minutes,
-            file_name=f"meeting_minutes_{datetime.now().strftime('%Y%m%d')}.txt",
+            "Download full minutes",
+            data=full,
+            file_name=f"minutes_{datetime.now().strftime('%Y%m%d')}.txt",
             mime="text/plain",
             use_container_width=True
         )
