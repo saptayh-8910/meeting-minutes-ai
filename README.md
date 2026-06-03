@@ -67,6 +67,20 @@ Output:
 
 ---
 
+## Evaluation
+
+Tested on 3 human-labeled transcripts with known action items, decisions, and blockers.
+
+| Metric | Score |
+|---|---|
+| Action Item Recall | **100%** |
+| Owner Accuracy | **84.1%** |
+| Email Quality (LLM judge) | **8.0 / 10** |
+
+Evaluation script: `evaluate_meeting_minutes.py` · Results: `eval_results.json`
+
+---
+
 ## Setup
 
 ```bash
