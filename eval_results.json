@@ -1,0 +1,133 @@
+{
+  "date": "2026-06-03 15:26",
+  "version": "1.0",
+  "models": {
+    "extraction": "claude-haiku-4-5-20251001",
+    "email": "claude-sonnet-4-6"
+  },
+  "test_cases": 3,
+  "ground_truth_type": "human-labeled",
+  "aggregate_scores": {
+    "action_recall": 1.0,
+    "owner_accuracy": 0.841,
+    "decision_recall": 1.0,
+    "blocker_recall": 0.722,
+    "open_q_recall": 1.0,
+    "attendee_accuracy": 1.0,
+    "email_quality": 0.8
+  },
+  "overall_score": 0.909,
+  "per_test": [
+    {
+      "test_case": "TC01",
+      "name": "Q2 Product Planning \u2014 AI Customer Support",
+      "elapsed_seconds": 27.6,
+      "scores": {
+        "action_recall": 1.0,
+        "owner_accuracy": 0.857,
+        "decision_recall": 1.0,
+        "blocker_recall": 1.0,
+        "open_question_recall": 1.0,
+        "attendee_accuracy": 1.0,
+        "email_quality": 0.7
+      },
+      "details": {
+        "actions": {
+          "recall": 1.0,
+          "owner_accuracy": 0.857,
+          "matched": 7,
+          "total": 7
+        },
+        "decisions": {
+          "recall": 1.0,
+          "matched": 3,
+          "total": 3
+        },
+        "blockers": {
+          "recall": 1.0,
+          "matched": 1,
+          "total": 1
+        },
+        "questions": {
+          "recall": 1.0,
+          "matched": 2,
+          "total": 2
+        }
+      }
+    },
+    {
+      "test_case": "TC02",
+      "name": "Engineering Sprint Planning",
+      "elapsed_seconds": 17.0,
+      "scores": {
+        "action_recall": 1.0,
+        "owner_accuracy": 0.833,
+        "decision_recall": 1.0,
+        "blocker_recall": 0.667,
+        "open_question_recall": 1.0,
+        "attendee_accuracy": 1.0,
+        "email_quality": 0.8
+      },
+      "details": {
+        "actions": {
+          "recall": 1.0,
+          "owner_accuracy": 0.833,
+          "matched": 6,
+          "total": 6
+        },
+        "decisions": {
+          "recall": 1.0,
+          "matched": 2,
+          "total": 2
+        },
+        "blockers": {
+          "recall": 0.667,
+          "matched": 2,
+          "total": 3
+        },
+        "questions": {
+          "recall": 1.0,
+          "matched": 1,
+          "total": 1
+        }
+      }
+    },
+    {
+      "test_case": "TC03",
+      "name": "Marketing Campaign Review",
+      "elapsed_seconds": 15.3,
+      "scores": {
+        "action_recall": 1.0,
+        "owner_accuracy": 0.833,
+        "decision_recall": 1.0,
+        "blocker_recall": 0.5,
+        "open_question_recall": 1.0,
+        "attendee_accuracy": 1.0,
+        "email_quality": 0.9
+      },
+      "details": {
+        "actions": {
+          "recall": 1.0,
+          "owner_accuracy": 0.833,
+          "matched": 6,
+          "total": 6
+        },
+        "decisions": {
+          "recall": 1.0,
+          "matched": 3,
+          "total": 3
+        },
+        "blockers": {
+          "recall": 0.5,
+          "matched": 1,
+          "total": 2
+        },
+        "questions": {
+          "recall": 1.0,
+          "matched": 2,
+          "total": 2
+        }
+      }
+    }
+  ]
+}
