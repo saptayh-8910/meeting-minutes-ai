@@ -147,9 +147,13 @@ Uses opacity-based CSS rather than hardcoded colors. Works in both modes without
 
 ## Project Structure
 
+```
 meeting-minutes-ai/
 ├── app.py                      # Main Streamlit application
 ├── evaluate_meeting_minutes.py # Evaluation script
 ├── eval_results.json           # Latest evaluation scores
 ├── requirements.txt
 └── README.md
+```
+
+---
