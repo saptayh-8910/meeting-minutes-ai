@@ -144,3 +144,12 @@ Uses opacity-based CSS rather than hardcoded colors. Works in both modes without
 議事録 (meeting minutes) documentation is taken seriously in Japanese business culture. Most tools default to English patterns. This one outputs in whichever language the transcript is in, and the email draft uses appropriate keigo when set to Japanese.
 
 ---
+
+## Project Structure
+
+meeting-minutes-ai/
+├── app.py                      # Main Streamlit application
+├── evaluate_meeting_minutes.py # Evaluation script
+├── eval_results.json           # Latest evaluation scores
+├── requirements.txt
+└── README.md
